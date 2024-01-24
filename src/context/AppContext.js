@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState  } from 'react'
-import { collection,query,onSnapshot,doc,updateDoc,deleteDoc, QuerySnapshot, addDoc,setDoc } from 'firebase/firestore';
+import { collection,query,onSnapshot,doc,updateDoc,deleteDoc, QuerySnapshot, addDoc,setDoc,runTransaction } from 'firebase/firestore';
 import {db} from '../data/firebase';
 
 export const Context = createContext();
@@ -286,40 +286,36 @@ export const ContextProvider = (props) => {
 
          const giveAnswer = async(user,lobby,questionNumber,answer)=>{
 
+          const lobbyRef = doc(db, "lobbies", lobby.id);
 
-
-           const  oldArray = [...lobby.answers];
-
-           const newAnswer ={
+          const newAnswer ={
             user:user.id,
             answer:answer, 
           }
+          
+await runTransaction(db, async (transaction) => {
+  const lobbySnapshot = await transaction.get(lobbyRef);
+  const oldArray = lobbySnapshot.data().answers;
+  const currentQuestion = oldArray.find(obj => obj.questionNumber === questionNumber);
 
-          const currentQuestion = oldArray.find(object => object.questionNumber === questionNumber);
+  if (currentQuestion) {
+    currentQuestion.responses.push(newAnswer);
+    const updatedArray = oldArray.map(obj =>
+      obj.questionNumber === questionNumber ? currentQuestion : obj
+    );
 
-if (currentQuestion) {
-
-  currentQuestion.responses.push(newAnswer);
-
-  const updatedArray = oldArray.map(obj =>
-    obj.questionNumber === questionNumber ? currentQuestion : obj
-  );
-
-  await updateDoc(doc(db, "lobbies", lobby.id), { answers: updatedArray });
-}
-          else{
-            const Theme = {
-              questionNumber: questionNumber,
-              responses: [newAnswer],
-            }
-            oldArray.push(Theme);
-          }
-         
-
-   
-           
-          await updateDoc(doc(db,"lobbies",lobby.id), {answers:oldArray});
-          //await
+    transaction.update(lobbyRef, { answers: updatedArray });
+  }
+  else{
+    const Theme = {
+      questionNumber: questionNumber,
+      responses: [newAnswer],
+    }
+    const oldArray = lobbySnapshot.data().answers;
+    oldArray.push(Theme);
+    transaction.update(lobbyRef, { answers: oldArray });
+  }
+});
          }
 
         const decreaseLobbyTime=async(lobby)=>{
