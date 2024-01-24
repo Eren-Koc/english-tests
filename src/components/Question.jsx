@@ -193,7 +193,7 @@ else{
           )
           :
           (
-            <div>Something went wrong.</div>
+           null
           )
         )
       
