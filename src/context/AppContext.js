@@ -293,29 +293,26 @@ export const ContextProvider = (props) => {
             answer:answer, 
           }
           
-await runTransaction(db, async (transaction) => {
-  const lobbySnapshot = await transaction.get(lobbyRef);
-  const oldArray = lobbySnapshot.data().answers;
-  const currentQuestion = oldArray.find(obj => obj.questionNumber === questionNumber);
+        await runTransaction(db, async (transaction) => {
+          const lobbySnapshot = await transaction.get(lobbyRef);
+          const oldArray = lobbySnapshot.data().answers;
+          const currentQuestion = oldArray.find(obj => obj.questionNumber === questionNumber);
 
-  if (currentQuestion) {
-    currentQuestion.responses.push(newAnswer);
-    const updatedArray = oldArray.map(obj =>
-      obj.questionNumber === questionNumber ? currentQuestion : obj
-    );
+          if (currentQuestion) {
+            currentQuestion.responses.push(newAnswer);
+          }
+          else{
+            const Theme = {
+              questionNumber: questionNumber,
+              responses: [newAnswer],
+            }
 
-    transaction.update(lobbyRef, { answers: updatedArray });
-  }
-  else{
-    const Theme = {
-      questionNumber: questionNumber,
-      responses: [newAnswer],
-    }
-    const oldArray = lobbySnapshot.data().answers;
-    oldArray.push(Theme);
-    transaction.update(lobbyRef, { answers: oldArray });
-  }
-});
+            oldArray.push(Theme);
+          
+          }
+
+          transaction.update(lobbyRef, { answers: oldArray });
+        });
          }
 
         const decreaseLobbyTime=async(lobby)=>{
@@ -330,7 +327,7 @@ await runTransaction(db, async (transaction) => {
         if(user.id==lobby.owner){
    
           for (const user of lobby.users) {
-            let userUpdated = false; // Kullanıcının güncellenip güncellenmediğini takip etmek için bir flag
+            let userUpdated = false; 
             let eachUserTotalPoint=0;
             for (const index of lobby.answers) {
               
@@ -352,7 +349,6 @@ await runTransaction(db, async (transaction) => {
           
           }
         
-          // Oluşturulan güncellenmiş kullanıcı listesini kullanarak lobi güncelle
           const updatePromise = await updateDoc(doc(db, "lobbies", lobby.id), {
             users: updatedUsers
           });
@@ -485,6 +481,7 @@ await runTransaction(db, async (transaction) => {
 
     }
      }
+
    
         
      

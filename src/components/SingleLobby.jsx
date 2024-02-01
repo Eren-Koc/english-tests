@@ -14,6 +14,7 @@ import Otp from './Otp';
 import Chat from './Chat';
 import { LuArrowLeftToLine } from "react-icons/lu";
 
+
 const SingleLobby = ({props}) => {
 const navigate=useNavigate();
 
@@ -148,6 +149,7 @@ if(!userInLobby && props.questions.length!=0){
 
   return (
     <div className='lobby w-full min-h-screen relative h-fit flex justify-center items-center p-6'>
+      <canvas className='fixed top-0 left-0 w-full h-full bg-transparent pointer-events-none'></canvas>
       {props.length > 1 ?  <Chat lobby={props}/> : null}
     
       

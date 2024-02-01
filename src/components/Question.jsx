@@ -2,21 +2,23 @@ import React, { useContext, useEffect, useState } from 'react'
 import { Context } from '../context/AppContext';
 import Loading from './Loading';
 import { FaUserClock ,FaUserCheck } from "react-icons/fa6";
-
+import JSConfetti from 'js-confetti'
 
 const Question = ({lobby}) => {
   const  {lobbies,giveAnswer,user,calculatePoints,resetTimer,testEnd,allUsers} = useContext(Context);
   const [shuffledAnswers,setShuffledAnswers] = useState([]);
   const [question,setQuestion]=useState("?");
   const [currentQuestionNumber,setCurrentQuestionNumber] = useState();
+  const [lockAnswerAvailable,setLockAnswerAvailable] = useState(false);
   const [isAnswerQuestion,setIsAnswerQuestion] = useState(false);
-
+  const jsConfetti = new JSConfetti()
   const controlRefreshIsAnswered=(index)=>{
 
 if(lobby.answers.length>0 && lobby.answers[index]){
     const FoundAnswer = lobby.answers[index].responses.find((eachResponse)=> eachResponse.user == user.id)
 
     if(FoundAnswer)
+    setLockAnswerAvailable(true);
     setIsAnswerQuestion(true);
   }   
   }
@@ -41,8 +43,12 @@ if(lobby.answers.length>0 && lobby.answers[index]){
 
 
   const sendAnswer=(user,lobby,questionNumber,answer)=>{
-    setIsAnswerQuestion(true);
-    giveAnswer(user,lobby,questionNumber,answer);
+    setLockAnswerAvailable(true);
+    giveAnswer(user,lobby,questionNumber,answer).then((result) => {
+      setIsAnswerQuestion(true);  
+    }).catch((err) => {
+      
+    });;
   }
 
 
@@ -88,6 +94,18 @@ if(lobby.answers.length>0 && lobby.answers[index]){
 //   }
 
 
+const AnswerRightConfetti=(userQuestionAnswer,QuestionRightAnswer)=>{
+ if(userQuestionAnswer.answer===QuestionRightAnswer){
+  jsConfetti.addConfetti({
+  
+    confettiRadius: 6,
+    confettiNumber:100,
+    confettiColors: [
+      '#4F46E5', '#5f51d4', '#5c52dd', '#573ed5', '#3e3fec', '#5759d8',
+    ],
+  })
+ }
+}
   
 
   const shufleAnswers =()=>{
@@ -97,11 +115,16 @@ if(lobby.answers.length>0 && lobby.answers[index]){
     const index=WhichQuestion()-1;
     
     if(currentQuestionNumber!=index){
-      
+      setLockAnswerAvailable(false);
       setIsAnswerQuestion(false);
       resetTimer(lobby);
       calculatePoints(lobby);
       setCurrentQuestionNumber(index);
+
+     const userAnswer = lobby.answers[index-1].responses.find((eachResponse)=>eachResponse.user==user.id);
+     const QuestionCorrectAnswer=lobby.questions[index-1].correct_answer;
+     AnswerRightConfetti(userAnswer,QuestionCorrectAnswer);
+
      lobby.questions[index].answers.map((eachAnswer)=>{
     allAnswers.push(eachAnswer);
   })
@@ -157,12 +180,12 @@ else{
 
   return (
     <div className='flex justify-center mt-6 items-center flex-col'>
-
+<canvas className='fixed top-0 left-0 w-full h-full min-h-screen pointer-events-none'></canvas>
         <div className='question py-3 px-4 bg-slate-300 rounded-lg font-semibold text-center text-xl'>{WhichQuestion()}. {question}</div>
         
         <div className='flex mt-12 gap-4 flex-wrap'>
           
-        { !isAnswerQuestion ? shuffledAnswers.map((eachAnswer,idx)=>{
+        { !lockAnswerAvailable ? shuffledAnswers.map((eachAnswer,idx)=>{
           return (
           <button key={"btn-"+idx} onClick={()=>{sendAnswer(user,lobby,WhichQuestion(),eachAnswer)}} className='p-4 flex-1 rounded-lg min-w-[150px] bg-slate-300 duration-300 hover:bg-app-purple ease-in-out hover:text-app-white text-left'>
             <b className='mr-1'>
@@ -176,7 +199,7 @@ else{
         :
          (
 
-          lobby.answers.length>0 && lobby.answers[WhichQuestion()-1] ? (
+          lobby.answers.length>0 && isAnswerQuestion && lobby.answers[WhichQuestion()-1] ? (
           <div className='p-3 flex justify-center items-center rounded-md flex-col  gap-3 bg-app-white shadow-md'>
        
        <div className='gap-4 flex justify-center items-center'>
