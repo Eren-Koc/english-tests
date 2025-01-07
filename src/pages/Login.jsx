@@ -98,7 +98,6 @@ const unvisible={
     <div className='min-h-screen h-fit w-full flex justify-center items-center'>
     <div className="flex min-h-full flex-col justify-center p-6 rounded-md sm:w-[500px] duration-300 bg-white lg:px-8">
   <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-    <img className="mx-auto h-10 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company"/>
     <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">{page ? "Login to your account" : "Register Now!"}</h2>
   </div>
 
